@@ -23,21 +23,19 @@ genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 # Set Streamlit page configuration and header
 st.set_page_config("Chat PDF")
-st.header("Chat with PDF using Gemini💁")
+st.title("")
+st.markdown("<h1 style='text-align: center;'>Project 1 </h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>QUERY ON YOUR DATA WITH GEMINI ♊</h1>", unsafe_allow_html=True)
+# st.markdown("<h1 style='text-align: center;'>Enter Your Question ...</h1>", unsafe_allow_html=True)
+with st.sidebar:
+    # Input field 
+    # st.text("Press the Submit button to upload a file.")
+    pdf_docs = st.file_uploader("Upload your PDF Files", accept_multiple_files=True,type=['pdf'])
 
-# Input field for user question
-user_question = st.text_input("Ask a Question from the PDF Files")
-
-# Check if user has entered a question
-if user_question:
-    
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-    pdf_docs = st.file_uploader("Upload your PDF Files and Click on the Submit & Process Button", accept_multiple_files=True)
-    
 
 
-
-    if st.button("Submit & Process"):
+    if st.button("Submit"):
         with st.spinner("Processing..."):
             raw_text = ""
             for pdf in pdf_docs:
@@ -55,12 +53,17 @@ if user_question:
 
 
 
+
+
+
+st.markdown("<h5 style='text-align: center;'>Press Ctrl+Enter to get your response</h1>", unsafe_allow_html=True)
+user_question  = st.text_area(label="Enter your Query...")
+if user_question :
             
-            # Define prompt template for conversational chain
-            prompt_template = """
-                Please provide a detailed answer based on the given context.
-                Ensure that your response contains all relevant information.If the answer cannot be found in the provided context, simply state, "The answer is not available in the context.".
-                Avoid providing incorrect information.
+  # Define prompt template for conversational chain
+  prompt_template = """
+Given the context information and not prior knowledge, 
+answer the query asking about citations over different topics.
 
                 Context:
                 {context}
@@ -71,11 +74,8 @@ if user_question:
                 Answer:
 
             """
-
-
-
-            # Initialize ChatGoogleGenerativeAI model
-            model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.3, safety_settings = {
+  # Initialize ChatGoogleGenerativeAI model
+  model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.3, safety_settings = {
                                   HarmCategory.HARM_CATEGORY_UNSPECIFIED: HarmBlockThreshold.BLOCK_NONE, 
                                   # HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE, 
                                   # HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE, 
@@ -87,15 +87,18 @@ if user_question:
 
 
             
-            prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
+  prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
         
-            chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
-            embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-            new_db = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
-            docs = new_db.similarity_search(user_question)
-            response = chain({"input_documents": docs, "question": user_question}, return_only_outputs=True)
+  chain = load_qa_chain(model, chain_type="stuff", prompt=prompt)
+  embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+  new_db = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
+  docs = new_db.similarity_search(user_question)
+  response = chain({"input_documents": docs, "question": user_question}, return_only_outputs=True)
 
 
 
-            # Display response
-            st.write("Reply: ", response["output_text"])
+
+
+  #Display response
+  st.write("Reply: ", response["output_text"])
+
